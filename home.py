@@ -1,170 +1,110 @@
 import pygame
 import sys
+from display_cards import display_cards
 
-# ---------------- CONFIG ----------------
 WIDTH, HEIGHT = 1000, 800
-BG_COLOR = (0, 128, 0)
+BG = (0, 128, 0)
 WHITE = (255, 255, 255)
-YELLOW = (255, 215, 0)
-RED = (200, 50, 50)
-
 FPS = 60
-# --------------------------------------
 
 
-def welcome_screen(screen):
+def welcome(screen):
+    font = pygame.font.SysFont(None, 80)
+    small = pygame.font.SysFont(None, 32)
     clock = pygame.time.Clock()
-    title_font = pygame.font.SysFont(None, 90)
-    text_font = pygame.font.SysFont(None, 36)
-
-    blink = True
-    blink_timer = 0
 
     while True:
         clock.tick(FPS)
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if e.type == pygame.KEYDOWN and e.key == pygame.K_RETURN:
+                return
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        screen.fill(BG)
+        t = font.render("ROUND CARD GAME", True, WHITE)
+        screen.blit(t, t.get_rect(center=(WIDTH//2, HEIGHT//2 - 40)))
+
+        p = small.render("Press ENTER to start", True, WHITE)
+        screen.blit(p, p.get_rect(center=(WIDTH//2, HEIGHT//2 + 40)))
+        pygame.display.flip()
+
+
+def input_players(screen):
+    font = pygame.font.SysFont(None, 36)
+    clock = pygame.time.Clock()
+
+    num_text = ""
+    done = False
+
+    while not done:
+        clock.tick(60)
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    return
-                if event.key == pygame.K_ESCAPE:
+            if e.type == pygame.KEYDOWN:
+                if e.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                    if num_text.strip().isdigit():
+                        n = int(num_text.strip())
+                        if 2 <= n <= 17:
+                            done = True
+                elif e.key == pygame.K_BACKSPACE:
+                    num_text = num_text[:-1]
+                elif e.unicode.isdigit():
+                    num_text += e.unicode
+
+        screen.fill((0, 128, 0))
+        txt = font.render(
+            f"Number of Players (2–17): {num_text}", True, (255, 255, 255)
+        )
+        screen.blit(txt, (280, 360))
+        pygame.display.flip()
+
+    # -------- NAME INPUT ----------
+    names = []
+    for i in range(n):
+        text = ""
+        entered = False
+
+        while not entered:
+            clock.tick(60)
+            for e in pygame.event.get():
+                if e.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
 
-        screen.fill(BG_COLOR)
+                if e.type == pygame.KEYDOWN:
+                    if e.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                        if text.strip():
+                            names.append(text.strip())
+                            entered = True
+                    elif e.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    elif e.unicode.isprintable():
+                        text += e.unicode
 
-        title = title_font.render("ROUND CARD GAME", True, YELLOW)
-        screen.blit(title, title.get_rect(center=(WIDTH // 2, HEIGHT // 3)))
+            screen.fill((0, 128, 0))
+            t = font.render(
+                f"Enter name of Player {i+1}: {text}",
+                True,
+                (255, 255, 255)
+            )
+            screen.blit(t, (240, 360))
+            pygame.display.flip()
 
-        blink_timer += 1
-        if blink_timer > FPS // 2:
-            blink = not blink
-            blink_timer = 0
-
-        if blink:
-            start = text_font.render("Press ENTER to Start", True, WHITE)
-            screen.blit(start, start.get_rect(center=(WIDTH // 2, HEIGHT // 2)))
-
-        pygame.display.flip()
-
-
-def input_number_players(screen):
-    clock = pygame.time.Clock()
-    font = pygame.font.SysFont(None, 36)
-
-    user_text = ""
-    error_msg = ""
-
-    while True:
-        clock.tick(FPS)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    if user_text.isdigit():
-                        num = int(user_text)
-                        if 2 <= num <= 17:
-                            return num
-                        else:
-                            error_msg = "Players must be between 2 and 17"
-                    else:
-                        error_msg = "Enter a valid number"
-
-                elif event.key == pygame.K_BACKSPACE:
-                    user_text = user_text[:-1]
-
-                else:
-                    if event.unicode.isdigit():
-                        user_text += event.unicode
-
-        screen.fill(BG_COLOR)
-
-        prompt = font.render("Enter number of players:", True, WHITE)
-        screen.blit(prompt, (350, 300))
-
-        text_surface = font.render(user_text, True, YELLOW)
-        screen.blit(text_surface, (350, 350))
-
-        if error_msg:
-            error = font.render(error_msg, True, RED)
-            screen.blit(error, (350, 400))
-
-        pygame.display.flip()
+    return n, names
 
 
-def input_player_name(screen, index):
-    clock = pygame.time.Clock()
-    font = pygame.font.SysFont(None, 36)
 
-    user_text = ""
-    error_msg = ""
-
-    while True:
-        clock.tick(FPS)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    if user_text.strip():
-                        return user_text.strip()
-                    else:
-                        error_msg = "Name cannot be empty"
-
-                elif event.key == pygame.K_BACKSPACE:
-                    user_text = user_text[:-1]
-
-                else:
-                    if event.unicode.isprintable():
-                        user_text += event.unicode
-
-        screen.fill(BG_COLOR)
-
-        prompt = font.render(f"Enter name of Player {index}:", True, WHITE)
-        screen.blit(prompt, (320, 300))
-
-        text_surface = font.render(user_text, True, YELLOW)
-        screen.blit(text_surface, (320, 350))
-
-        if error_msg:
-            error = font.render(error_msg, True, RED)
-            screen.blit(error, (320, 400))
-
-        pygame.display.flip()
-
-
-def run_menu():
+if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Card Game")
 
-    welcome_screen(screen)
+    welcome(screen)
+    num_players, names = input_players(screen)
 
-    num_players = input_number_players(screen)
-
-    names = []
-    for i in range(1, num_players + 1):
-        name = input_player_name(screen, i)
-        names.append(name)
-
-    return num_players, names
-
-
-if __name__ == "__main__":
-    num_players, player_names = run_menu()
-    print("Players:", num_players)
-    print("Names:", player_names)
-
-    import display_cards
-    display_cards.display_cards(num_players, player_names)
+    display_cards(num_players, names)
